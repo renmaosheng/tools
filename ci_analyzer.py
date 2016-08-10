@@ -10,6 +10,7 @@ import urllib
 match_str = ["out: Ran", "out: OK", "out: FAILED", "Start to", "Opening OVA source" ]
 print_seq = ["nimbus_deploy", "vio_ovf_deploy", "vio_deploy", "keystone", "glance",
              "nova", "cinder", "neutron", "heat", "scenario", "vmware"]
+tests  = ["keystone", "glance","nova", "cinder", "neutron", "heat", "scenario", "vmware"]
 exclude_print = ["nimbus_deploy", "vio_ovf_deploy", "vio_deploy"]
 def formal_output (timestamp):
     print "{0: <15}{1: <15}{2: <15}{3: <15}{4: <15}".format("step_name", "execution_time","total_tests","failed","skipped")
@@ -22,17 +23,17 @@ def formal_output (timestamp):
             else:
                 print "{0: <15}{1: <15}{2: <15}{3: <15}{4: <15}".format(k, v[1], v[2], v[3], v[4])
 def formal_label ():
-    print "{0: <30}{1: <10}{2: <10}{3: <10} {4: <5}{5: <5}{6: <5}{7: <5} {8: <5}{9: <5}{10: <5}{11: <5}" \
+    print "{0: <23}{36: <12}{37: <5}{38: <3}{39: <5}{1: <10}{2: <10}{3: <10} {4: <5}{5: <5}{6: <4}{7: <4} {8: <5}{9: <5}{10: <5}{11: <5}" \
            "{12: <5}{13: <5}{14: <5}{15: <5}{16: <5}{17: <5}{18: <5}{19: <5}{20: <5}{21: <5}{22: <5}{23: <5}" \
            "{24: <5}{25: <5}{26: <5}{27: <5}{28: <5}{29: <5}{30: <5}{31: <5}{32: <5}{33: <5}{34: <5}{35: <5}".format(
            "build_number", "t_nimbus","t_vio_ovf","t_vio","t_ks","ks_T","ks_F", "ks_S","t_g","g_T","g_F", "g_S",
            "t_n","n_T","n_F", "n_S","t_c","c_T","c_F", "c_S","t_nt","nt_T","nt_F", "nt_S","t_h","h_T","h_F", "h_S",
-           "t_sc","sc_T","sc_F", "sc_S","t_vm","vm_T","vm_F", "vm_S")
+           "t_sc","sc_T","sc_F", "sc_S","t_vm","vm_T","vm_F", "vm_S", "date", "T", "F", "S")
 def formal_data (t):
     if len(t) == 0:
         return
     if "vmware" in t.keys(): 
-        print "{0: <30}{1: <10}{2: <10}{3: <10} {4: <5}{5: <5}{6: <5}{7: <5} {8: <5}{9: <5}{10: <5}{11: <5}" \
+        print "{0: <23}{36: <12}{37: <5}{38: <3}{39: <5}{1: <10}{2: <10}{3: <10} {4: <5}{5: <5}{6: <4}{7: <4} {8: <5}{9: <5}{10: <5}{11: <5}" \
            "{12: <5}{13: <5}{14: <5}{15: <5}{16: <5}{17: <5}{18: <5}{19: <5}{20: <5}{21: <5}{22: <5}{23: <5}" \
            "{24: <5}{25: <5}{26: <5}{27: <5}{28: <5}{29: <5}{30: <5}{31: <5}{32: <5}{33: <5}{34: <5}{35: <5}".format(
            t["build"], t["nimbus_deploy"][1],t["vio_ovf_deploy"][1],t["vio_deploy"][1], 
@@ -43,10 +44,11 @@ def formal_data (t):
            t["neutron"][1].split('.')[0],t["neutron"][2],t["neutron"][3],t["neutron"][4],
            t["heat"][1].split('.')[0],t["heat"][2],t["heat"][3],t["heat"][4],
            t["scenario"][1].split('.')[0],t["scenario"][2],t["scenario"][3],t["scenario"][4],
-           t["vmware"][1].split('.')[0], t["vmware"][2],t["vmware"][3],t["vmware"][4]
+           t["vmware"][1].split('.')[0], t["vmware"][2],t["vmware"][3],t["vmware"][4],
+           t["date"], t["total"], t["failures"], t["skipped"]
            )
     else:
-         print "{0: <30}{1: <10}{2: <10}{3: <10} {4: <5}{5: <5}{6: <5}{7: <5} {8: <5}{9: <5}{10: <5}{11: <5}" \
+         print "{0: <23}{32: <12}{33: <5}{34: <3}{35: <5}{1: <10}{2: <10}{3: <10} {4: <5}{5: <5}{6: <4}{7: <4} {8: <5}{9: <5}{10: <5}{11: <5}" \
            "{12: <5}{13: <5}{14: <5}{15: <5}{16: <5}{17: <5}{18: <5}{19: <5}{20: <5}{21: <5}{22: <5}{23: <5}" \
            "{24: <5}{25: <5}{26: <5}{27: <5}{28: <5}{29: <5}{30: <5}{31: <5}".format(
            t["build"], t["nimbus_deploy"][1],t["vio_ovf_deploy"][1],t["vio_deploy"][1], 
@@ -56,7 +58,8 @@ def formal_data (t):
            t["cinder"][1].split('.')[0],t["cinder"][2],t["cinder"][3],t["cinder"][4],
            t["neutron"][1].split('.')[0],t["neutron"][2],t["neutron"][3],t["neutron"][4],
            t["heat"][1].split('.')[0],t["heat"][2],t["heat"][3],t["heat"][4],
-           t["scenario"][1].split('.')[0],t["scenario"][2],t["scenario"][3],t["scenario"][4]
+           t["scenario"][1].split('.')[0],t["scenario"][2],t["scenario"][3],t["scenario"][4],
+           t["date"], t["total"], t["failures"], t["skipped"]
            )
 
 def cal_exe_time(end, start):
@@ -159,6 +162,18 @@ def gen_timestamp(content):
     timestamp['vio_deploy'].append(cal_exe_time(timestamp['keystone'][0],timestamp['vio_deploy'][0]))
     if 'neutron' not in timestamp.keys():
         timestamp['neutron']=["0","0","0","0","0"]
+    total_tests = 0
+    total_failures = 0
+    total_skipped = 0
+    for k in tests:
+        if k in timestamp.keys():
+            total_tests = total_tests + int(timestamp[k][2])
+            total_failures = total_failures + int(timestamp[k][3])
+            total_skipped = total_skipped + int(timestamp[k][4])
+        
+    timestamp['total'] = total_tests
+    timestamp['failures'] = total_failures
+    timestamp['skipped'] = total_skipped
     return timestamp
 def example():
     url_range = range(177,178)
@@ -169,7 +184,7 @@ def example():
         print content
         timestamp = gen_timestamp(content)
         print timestamp
-        formal_data(timestamp)
+#formal_data(timestamp)
 
 def nsxv_ha():
     url_range = range(177,289)
@@ -218,7 +233,7 @@ def collect_all():
 def main(argv):
 # filename = argv[1]
     execution_time = {}
-    example()
+#example()
     collect_all()
     return
  
